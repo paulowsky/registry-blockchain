@@ -6,31 +6,32 @@ contract Registry {
   uint public contractsCount = 0;
 
   struct Signatory {
-    address id;
+    address signatoryAddress;
     string name;
-    bool signed;
     uint datetimeSigned;
   }
 
   struct Contract {
-    uint id;
     string content;
     uint datetimeCreated;
-    mapping(address => Signatory) signatories;
-    address[] signatoriesAddress;
-    bool allSigned;
+    uint creatorSignatoryId;
+    uint amountRequiredSignatures;
+    uint amountSigned;
   }
 
   mapping(uint => Contract) public contracts;
+  mapping(uint => Signatory[]) public signatories;
 
   event ContractCreated(
     uint contractId,
-    uint datetimeCreated
+    uint datetimeCreated,
+    address creator
   );
 
   event ContractSigned(
     uint contractId,
-    uint datetimeSigned
+    uint datetimeSigned,
+    address signer
   );
 
   constructor() public {}
@@ -38,62 +39,64 @@ contract Registry {
   function createContract(
     string memory _name,
     string memory _content,
-    Signatory[] memory _signatories
+    uint _amountSignatories
   ) public {
     uint _datetimeCreated = block.timestamp;
+    uint _creatorSignatoryId = 0;
 
     Contract storage newContract = contracts[contractsCount];
     newContract.content = _content;
     newContract.datetimeCreated = _datetimeCreated;
-    newContract.signatoriesAddress = new address[](_signatories.length + 1);
+    newContract.creatorSignatoryId = _creatorSignatoryId;
+    newContract.amountRequiredSignatures = _amountSignatories + 1;
+    newContract.amountSigned = 1;
 
-    newContract.signatories[msg.sender] = Signatory({
-      id: msg.sender,
+    Signatory memory _signatory = Signatory({
+      signatoryAddress: msg.sender,
       name: _name,
-      signed: true,
       datetimeSigned: _datetimeCreated
     });
 
-    newContract.signatoriesAddress.push(msg.sender);
+    signatories[contractsCount].push(_signatory);
 
-    if (_signatories.length == 0) {
-      newContract.allSigned = true;
-    }
+    emit ContractCreated(contractsCount, _datetimeCreated, msg.sender);
 
-    for(uint i = 0; i < _signatories.length; i++) {
-      newContract.signatories[_signatories[i].id] = _signatories[i];
-      newContract.signatoriesAddress.push(_signatories[i].id);
-    }
-
-    contractsCount ++;
-
-    emit ContractCreated(contractsCount, _datetimeCreated);
+    contractsCount++;
   }
 
-  function signContract(uint _contractId) public {
-    require(_contractId < contractsCount);
-    require(contracts[_contractId].signatories[msg.sender].id == msg.sender);
-    require(contracts[_contractId].signatories[msg.sender].signed == false);
+  function signContract(
+    uint _contractId,
+    string memory _name
+  ) public {
+    // check if id is valid
+    require(_contractId >= 0 && _contractId < contractsCount);
 
-    uint _datetimeSigned = block.timestamp;
-    bool _allSigned = true;
+    Contract storage _contract = contracts[_contractId];
 
-    address[] memory _signatoriesAddress = contracts[_contractId].signatoriesAddress;
-    Signatory memory _signatory = contracts[_contractId].signatories[msg.sender];
+    // check if the contract need more signatures
+    require(_contract.amountRequiredSignatures > _contract.amountSigned);
 
-    _signatory.signed = true;
-    _signatory.datetimeSigned = _datetimeSigned;
-
-    for(uint i = 0; i < _signatoriesAddress.length; i++){
-      if (contracts[_contractId].signatories[_signatoriesAddress[i]].signed == false) {
-        _allSigned = false;
+    bool _senderNotSigned = true;
+    for (uint i=0; i < _contract.amountSigned; i++) {
+      if (signatories[_contractId][i].signatoryAddress == msg.sender) {
+        _senderNotSigned = false;
         break;
       }
     }
+    require(_senderNotSigned);
 
-    contracts[_contractId].signatories[msg.sender] = _signatory;
-    contracts[_contractId].allSigned = _allSigned;
+    uint _datetimeSigned = block.timestamp;
 
-    emit ContractSigned(_contractId, _datetimeSigned);
+    Signatory memory _signatory = Signatory({
+      signatoryAddress: msg.sender,
+      name: _name,
+      datetimeSigned: _datetimeSigned
+    });
+
+    signatories[_contractId].push(_signatory);
+
+    _contract.amountSigned++;
+
+    emit ContractSigned(_contractId, _datetimeSigned, msg.sender);
   }
 }

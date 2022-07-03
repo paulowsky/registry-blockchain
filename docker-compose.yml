@@ -1,0 +1,9 @@
+version: '2'
+services:
+  ganache:
+    image: trufflesuite/ganache:v7.2.0
+    hostname: ganache
+    container_name: ganache
+    ports:
+      - '8545:8545'
+    command: --wallet.totalAccounts 10 --wallet.defaultBalance 100 --server.port 8545

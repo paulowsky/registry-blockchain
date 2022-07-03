@@ -1,0 +1,10 @@
+{
+  "app_name": "Registry",
+  "not_found": "Page not found!",
+  "metamask": {
+    "error": {
+      "title": "Seems like you don't have Meta Mask installed!",
+      "button_install": "Download Meta Mask"
+    }
+  }
+}

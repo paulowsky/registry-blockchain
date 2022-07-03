@@ -1,0 +1,15 @@
+logs
+*.log
+node_modules
+dist
+dist-ssr
+.DS_Store
+.idea
+*.local
+*.lock
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
