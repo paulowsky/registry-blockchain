@@ -6,7 +6,7 @@ import { ethers } from 'ethers'
 
 import Registry from '@/artifacts/Registry.json'
 
-const contractAddress = '0xb7ca7a9aa4914761fb055bb7b4024ae0a6caf908'
+const contractAddress = '0x797EE4eFe05C653319637fae1977E326d5a8b32d'
 
 import { ContractList } from '@/components/ContractList'
 
