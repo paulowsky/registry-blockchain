@@ -1,5 +1,8 @@
 module.exports = {
   contracts_build_directory: "./client/src/artifacts/",
+  dashboard: {
+    port: 24012
+  },
   networks: {
     development: {
       host: process.env.HOST || "127.0.0.1",

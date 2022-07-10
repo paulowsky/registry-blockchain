@@ -4,6 +4,7 @@
   "license": "MIT",
   "scripts": {
     "compile": "truffle compile",
+    "dashboard": "truffle dashboard",
     "migrate": "truffle migrate --reset",
     "test": "truffle test"
   },
