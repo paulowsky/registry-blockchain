@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
-import { PageNotFound } from '@/pages/404'
 import { Metamask } from '@/pages/Metamask'
+import { PageNotFound } from '@/pages/404'
 import { Home } from '@/pages/Home'
 
 function RequireMetamask({ children }) {

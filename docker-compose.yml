@@ -5,5 +5,19 @@ services:
     hostname: ganache
     container_name: ganache
     ports:
-      - '8545:8545'
+      - 8545:8545
     command: --wallet.totalAccounts 10 --wallet.defaultBalance 100 --server.port 8545
+    networks:
+      - registry-network
+  client:
+    build: client/.
+    hostname: client
+    container_name: client
+    ports:
+      - '3000:3000'
+    networks:
+      - registry-network
+
+networks:
+  registry-network:
+    driver: bridge
