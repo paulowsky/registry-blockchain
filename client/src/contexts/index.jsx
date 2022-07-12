@@ -1,7 +1,7 @@
 import React from 'react'
 
-import { Web3Context } from './Web3Context'
+import { Web3Provider } from './Web3Context'
 
 export const AppProvider = ({ children }) => {
-  return <Web3Context>{children}</Web3Context>
+  return <Web3Provider>{children}</Web3Provider>
 }

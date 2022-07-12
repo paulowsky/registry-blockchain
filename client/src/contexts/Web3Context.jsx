@@ -1,102 +1,132 @@
-import React, { createContext, useCallback, useState } from 'react'
+import React, { createContext, useState } from 'react'
 
-import { useNavigate } from 'react-router-dom'
+import { ethers } from 'ethers'
+
+import Registry from '@/artifacts/Registry.json'
 
 export const Web3Context = createContext({})
 
 export const Web3Provider = ({ children }) => {
-  const navigate = useNavigate()
+  const contractAddress = '0x2625eb5ba5c1e768974b408d335ae46bdf136b91'
 
-  const [user, setUser] =
-    useState <
-    UserProps >
-    (() => {
-      const userLocalStorage = localStorage.getItem('@athenaz:user')
+  const [balance, setBalance] = useState()
+  const [address, setAddress] = useState()
+  const [registry, setRegistry] = useState()
 
-      if (userLocalStorage) {
-        const userData = JSON.parse(userLocalStorage)
-        api.defaults.headers.authorization = `Bearer ${userData.token}`
+  const [isLoading, setIsLoading] = useState(false)
 
-        return userData
-      }
+  const updateAccount = async () => {
+    setIsLoading(true)
 
-      return {}
-    })
-
-  const isAuthenticated = !!user.token
-
-  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false)
-
-  const signIn = useCallback(async ({ email, password }) => {
     try {
-      const response =
-        (await api.post) <
-        UserProps >
-        ('/auth/login',
-        {
-          email,
-          password
-        })
+      console.log('Updating account...')
 
-      const {
-        data: { token }
-      } = response
+      const [account] = await window.ethereum.request({
+        method: 'eth_requestAccounts'
+      })
 
-      if (token) {
-        api.defaults.headers.authorization = `Bearer ${token}`
+      const provider = new ethers.providers.Web3Provider(window.ethereum)
 
-        const userResponse = await api.get('/user/me')
+      setBalance(ethers.utils.formatEther(await provider.getBalance(account)))
+      setAddress(await provider._getAddress(account))
 
-        const userData = {
-          ...userResponse.data,
-          token
-        }
-
-        // Save user on browser local storage
-        localStorage.setItem('@athenaz:user', JSON.stringify(userData))
-
-        setUser(userData)
-
-        return userData
-      }
-    } catch (err) {
-      if (err.response?.data) {
-        const {
-          response: { data }
-        } = err
-
-        if (data) return data
-      }
-
-      return {
-        statusCode: 500,
-        error: 'Erro ao realizar login',
-        message:
-          'Tivemos um problema ao processar sua requisição. Nosso time já está resolvendo o problema!'
-      }
-    }
-  }, [])
-
-  const signOut = useCallback(async () => {
-    try {
-      localStorage.removeItem('@athenaz:user')
-      localStorage.removeItem('@athenaz:clinic')
-      navigate('/')
-      setUser({})
+      setRegistry(
+        new ethers.Contract(contractAddress, Registry.abi, provider.getSigner())
+      )
     } catch (err) {
       console.error(err)
     }
-  }, [setUser, navigate])
+
+    setIsLoading(false)
+  }
+
+  const getContracts = async () => {
+    setIsLoading(true)
+
+    try {
+      console.log('Finding contracts...')
+
+      let _contracts = []
+      let _signatories = []
+
+      const contractsCount = await registry.contractsCount()
+
+      for (let i = 0; i < contractsCount; i++) {
+        let currentContract = await registry.contracts(i)
+        let _contractSignatories = []
+
+        for (let j = 0; j < currentContract.amountSigned.toNumber(); j++) {
+          let currentSignatory = await registry.signatories(i, j)
+          _contractSignatories.push(currentSignatory)
+        }
+        _contracts.push(currentContract)
+        _signatories.push(_contractSignatories)
+      }
+
+      return {
+        contracts: _contracts,
+        signatories: _signatories
+      }
+    } catch (err) {
+      console.error(err)
+    }
+
+    setIsLoading(false)
+  }
+
+  const createContract = async (content, amountSignatories) => {
+    setIsLoading(true)
+
+    try {
+      console.log('Creating contract...')
+
+      const name = window.prompt('Type your signature:')
+
+      await registry.createContract(name, content, amountSignatories)
+
+      window.alert('Contract created!')
+
+      getContracts()
+    } catch (err) {
+      console.error(err)
+    }
+
+    setIsLoading(false)
+  }
+
+  const signContract = async contractId => {
+    setIsLoading(true)
+
+    try {
+      console.log('signing contract...')
+
+      const name = window.prompt('your signature:')
+
+      await registry.signContract(contractId, name)
+
+      window.alert('contract signed!')
+
+      getContracts()
+    } catch (err) {
+      console.error(err)
+    }
+
+    setIsLoading(false)
+  }
 
   return (
     <Web3Context.Provider
       value={{
-        user,
-        isAuthenticated,
-        signOut,
-        signIn,
-        isLoadingDashboard,
-        setIsLoadingDashboard
+        contractAddress,
+        balance,
+        address,
+        registry,
+        isLoading,
+        setIsLoading,
+        updateAccount,
+        getContracts,
+        createContract,
+        signContract
       }}
     >
       {children}
