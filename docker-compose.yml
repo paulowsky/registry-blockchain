@@ -15,6 +15,9 @@ services:
     container_name: client
     ports:
       - '3000:3000'
+    volumes:
+      - ./client:/app
+      - /app/node_modules
     networks:
       - registry-network
 

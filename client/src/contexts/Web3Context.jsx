@@ -7,7 +7,7 @@ import Registry from '@/artifacts/Registry.json'
 export const Web3Context = createContext({})
 
 export const Web3Provider = ({ children }) => {
-  const contractAddress = '0x2625eb5ba5c1e768974b408d335ae46bdf136b91'
+  const contractAddress = '0x8Db33dBa4d360De4ca48D212Ad625AD3882235cd'
 
   const [balance, setBalance] = useState()
   const [address, setAddress] = useState()
@@ -43,32 +43,28 @@ export const Web3Provider = ({ children }) => {
   const getContracts = async () => {
     setIsLoading(true)
 
-    try {
-      console.log('Finding contracts...')
+    console.log('Finding contracts...')
 
-      let _contracts = []
-      let _signatories = []
+    let _contracts = []
+    let _signatories = []
 
-      const contractsCount = await registry.contractsCount()
+    const contractsCount = await registry.contractsCount()
 
-      for (let i = 0; i < contractsCount; i++) {
-        let currentContract = await registry.contracts(i)
-        let _contractSignatories = []
+    for (let i = 0; i < contractsCount; i++) {
+      let currentContract = await registry.contracts(i)
+      let _contractSignatories = []
 
-        for (let j = 0; j < currentContract.amountSigned.toNumber(); j++) {
-          let currentSignatory = await registry.signatories(i, j)
-          _contractSignatories.push(currentSignatory)
-        }
-        _contracts.push(currentContract)
-        _signatories.push(_contractSignatories)
+      for (let j = 0; j < currentContract.amountSigned.toNumber(); j++) {
+        let currentSignatory = await registry.signatories(i, j)
+        _contractSignatories.push(currentSignatory)
       }
+      _contracts.push(currentContract)
+      _signatories.push(_contractSignatories)
+    }
 
-      return {
-        contracts: _contracts,
-        signatories: _signatories
-      }
-    } catch (err) {
-      console.error(err)
+    return {
+      contracts: _contracts,
+      signatories: _signatories
     }
 
     setIsLoading(false)
